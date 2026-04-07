@@ -1,0 +1,24 @@
+# Environnement virtuel
+venv/
+venv_phishing/
+.venv/
+env/
+
+# Fichiers Python cache
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Données et modèles (optionnel - décommentez si besoin)
+# data/
+# models/*.pkl

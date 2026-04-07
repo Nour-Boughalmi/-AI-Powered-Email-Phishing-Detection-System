@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détection Phishing par IA - CatBoost + NLP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            display: none;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .result.phishing {
+            background: #fee;
+            border: 2px solid #e74c3c;
+        }
+
+        .result.legitimate {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #ff9800, #e74c3c);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Détection de Phishing par IA</h1>
+            <p>Modèle CatBoost + NLP | Analyse intelligente des emails</p>
+        </div>
+
+        <div class="card">
+            <h3>📧 Collez l'email à analyser</h3>
+            <textarea id="emailInput" placeholder="Collez le contenu de l'email ici..."></textarea>
+            <br>
+            <button onclick="analyzeEmail()">🔍 Analyser l'email</button>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Analyse en cours...</p>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        async function analyzeEmail() {
+            const email = document.getElementById('emailInput').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!email.trim()) {
+                alert('Veuillez entrer un email à analyser');
+                return;
+            }
+            
+            // Afficher chargement
+            loadingDiv.style.display = 'block';
+            resultDiv.classList.remove('show');
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    resultDiv.innerHTML = `<div style="color: red;">❌ Erreur: ${result.error}</div>`;
+                } else {
+                    const confidence = (result.confidence * 100).toFixed(1);
+                    const isPhishing = result.is_phishing;
+                    
+                    resultDiv.className = `result ${isPhishing ? 'phishing' : 'legitimate'} show`;
+                    resultDiv.innerHTML = `
+                        <h2>${isPhishing ? '⚠️ ALERTE: Email suspect détecté !' : '✅ Email légitime'}</h2>
+                        <p style="font-size: 1.2em; margin: 15px 0;">${result.message}</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${confidence}%">
+                                Confiance: ${confidence}%
+                            </div>
+                        </div>
+                       
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result show';
+                resultDiv.innerHTML = `<div style="color: red;">❌ Erreur: ${error.message}</div>`;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        // Exemple d'email phishing pour tester
+        function loadExample() {
+            document.getElementById('emailInput').value = `From: security@paypal-alerts.com
+Subject: URGENT: Your account has been limited
+
+Dear customer,
+
+We noticed unusual activity on your account. Please verify immediately:
+
+http://bit.ly/paypal-verify-urgent
+
+Failure to verify will result in account closure.
+
+PayPal Security`;
+        }
+    </script>
+</body>
+</html>
