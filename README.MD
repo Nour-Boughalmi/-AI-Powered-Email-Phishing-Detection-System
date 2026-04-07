@@ -117,7 +117,7 @@ AI Model (CatBoost .pkl)
 * 500 decision trees
 * Automatic class imbalance handling
 * Feature importance analysis
-* Classification threshold: **0.60**
+* Classification threshold: **0.70**
 
 ---
 
