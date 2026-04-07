@@ -135,10 +135,10 @@ project/
 │
 ├── frontend/
 │   ├── index.html
-│   ├── styles.css
-│   └── script.js
-│
-├── train_final_corrected.py
+│── data/  
+│     
+│── notebooks/
+│      
 ├── requirements.txt
 └── README.md
 ```
